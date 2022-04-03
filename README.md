@@ -1,1 +1,1 @@
-# StockAnalysis
+# StockAnalyst by Excel VBA
