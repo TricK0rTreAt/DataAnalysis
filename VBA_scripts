@@ -1,0 +1,138 @@
+Sub Final()
+
+'add The ticker symbol
+    Range("I1").Value = "Ticker"
+    Range("J1").Value = "Yearly Change"
+    Range("K1").Value = "Percent Change"
+    Range("L1").Value = "Total Stock Volume"
+    
+        Dim i As Long
+        Dim j As Long
+        Dim k As Long
+        Dim lastRow1 As Long
+        Dim lastRow2 As Long
+        Dim Exist As Boolean
+        
+        lastRow1 = Cells(Rows.Count, 1).End(xlUp).Row
+        
+        k = 1
+        
+        For i = 2 To lastRow1
+        
+            Exist = False
+            lastRow2 = Cells(Rows.Count, 9).End(xlUp).Row
+        
+                For j = 2 To lastRow2
+        
+                    If Cells(i, 1) = Cells(j, 9) Then
+                    Exist = True
+                        Exit For
+                    End If
+        
+        Next
+        
+        If Exist = False Then
+        
+                k = k + 1
+                Cells(k, 9) = Cells(i, 1)
+            End If
+        Next
+
+
+'calculate the volumn
+        
+        Dim lastRow3 As Long
+        lastRow3 = Cells(Rows.Count, 9).End(xlUp).Row
+        
+        For m = 2 To lastRow3
+        
+        Range("L" & m) = Application.WorksheetFunction.SumIf(Range("A2:A158885"), Range("I" & m), Range("G2:G158885"))
+        
+        Next
+
+'yearlychange
+        
+        Dim n As Long
+        Dim o As Long
+        
+        Set DateRange = Range("B:B")
+        Range("N1").Value = "Open Value"
+        Range("O1").Value = "Close Value"
+        
+        opendate = WorksheetFunction.Min(DateRange)
+        closedate = WorksheetFunction.Max(DateRange)
+        
+        For n = 2 To Cells(Rows.Count, "I").End(xlUp).Row
+               For o = 2 To Cells(Rows.Count, "A").End(xlUp).Row
+               
+               If Cells(n, 9).Value = Cells(o, 1).Value And Cells(o, 2).Value = opendate Then
+               
+               Cells(n, 14).Value = Cells(o, 3).Value
+               
+               End If
+               
+               If Cells(n, 9).Value = Cells(o, 1).Value And Cells(o, 2).Value = closedate Then
+               
+               Cells(n, 15).Value = Cells(o, 6).Value
+               
+               End If
+                      
+        Next o
+        Next n
+
+'yearly percent change
+        
+        For i = 2 To Cells(Rows.Count, "I").End(xlUp).Row
+        Cells(i, 10).Value = Cells(i, 15).Value - Cells(i, 14).Value
+        Cells(i, 11).Value = (Cells(i, 15).Value - Cells(i, 14).Value) / Cells(i, 14).Value
+        
+        Cells(i, 11).Value = Format(Cells(i, 11).Value, "0.00%")
+        
+            If Cells(i, 10).Value < 0 Then
+                 Cells(i, 10).Interior.Color = RGB(255, 0, 0)
+                 
+             ElseIf Cells(i, 10).Value > 0 Then
+                   Cells(i, 10).Interior.Color = RGB(0, 255, 0)
+             
+             End If
+        
+        Next i
+
+'Bonus
+        
+        Range("S1").Value = "Ticker"
+        Range("T1").Value = "Value"
+        
+        Range("R2").Value = "Greatest % Increase"
+        Range("R3").Value = "Greatest % Decrease"
+        Range("R4").Value = "Greatest Total Volume"
+        
+        Set DateRange1 = Range("K:K")
+        Set DateRange2 = Range("L:L")
+        
+        Range("T2").Value = WorksheetFunction.Max(DateRange1)
+        Range("T2").Value = Format(Range("T2").Value, "0.00%")
+        Range("T3").Value = WorksheetFunction.Min(DateRange1)
+        Range("T3").Value = Format(Range("T3").Value, "0.00%")
+        Range("T4").Value = WorksheetFunction.Max(DateRange2)
+        
+        For i = 2 To Cells(Rows.Count, "I").End(xlUp).Row
+        If Cells(i, 11).Value = Cells(2, 20) Then
+          Cells(2, 19).Value = Cells(i, 9)
+        End If
+        Next
+        
+        For j = 2 To Cells(Rows.Count, "I").End(xlUp).Row
+        If Cells(j, 11).Value = Cells(3, 20) Then
+          Cells(3, 19).Value = Cells(j, 9)
+        End If
+        Next
+        
+        For k = 2 To Cells(Rows.Count, "I").End(xlUp).Row
+        If Cells(k, 12).Value = Cells(4, 20) Then
+          Cells(4, 19).Value = Cells(k, 9)
+        End If
+        Next
+        
+    Columns("A:T").AutoFit
+End Sub
