@@ -1,103 +1,113 @@
-Sub Final()
+Sub stock_data()
 
-'add The ticker symbol
+'apply macro to every worksheet in the workbook
+
+For Each ws In Worksheets
+    ws.Activate
+
+'create for loop to add column headers to each worksheet in the workbook
+
+
+    'create column named "Ticker", "Yearly Change", "Percent Change", and "Total Stock Volume" for each stock
     Range("I1").Value = "Ticker"
     Range("J1").Value = "Yearly Change"
     Range("K1").Value = "Percent Change"
     Range("L1").Value = "Total Stock Volume"
     
-        Dim i As Long
-        Dim j As Long
-        Dim k As Long
-        Dim lastRow1 As Long
-        Dim lastRow2 As Long
-        Dim Exist As Boolean
+    'create variables
+
+    Dim volume As Double
+    Dim i As Long
+    Dim yearly_change As Single
+    Dim j As Integer
+    Dim start As Long
+    Dim lastrow As Long
+    Dim percentChange As Single
+
+
+    'initialize values
+    'iterator for ticker names
+    j = 0
+    'volume total
+    volume = 0
+    'yearly change
+    yearly_change = 0
+    'start at row 2
+    start = 2
+    
+    'find the last row to be counted
+    lastrow = Cells(Rows.Count, 1).End(xlUp).Row
+    
+    'iterate through row 2 to lastrow
+    For i = 2 To lastrow
+    
+        'if the ticker is different from the row under it, print
+        If Cells(i + 1, "A").Value <> Cells(i, "A").Value Then
         
-        lastRow1 = Cells(Rows.Count, 1).End(xlUp).Row
-        
-        k = 1
-        
-        For i = 2 To lastRow1
-        
-            Exist = False
-            lastRow2 = Cells(Rows.Count, 9).End(xlUp).Row
-        
-                For j = 2 To lastRow2
-        
-                    If Cells(i, 1) = Cells(j, 9) Then
-                    Exist = True
-                        Exit For
-                    End If
-        
-        Next
-        
-        If Exist = False Then
-        
-                k = k + 1
-                Cells(k, 9) = Cells(i, 1)
+            'store the volume
+            volume = volume + Cells(i, "G").Value
+            
+            
+            'if the volume is 0
+            If volume = 0 Then
+                'print zeroes
+                Range("I" & 2 + j).Value = Cells(i, "G").Value
+                Range("J" & 2 + j).Value = 0
+                Range("K" & 2 + j).Value = "%" & 0
+                Range("L" & 2 + j).Value = 0
+            
+
+            Else
+            'find the first non zero opening price - will not be able to calculate % change if zero
+                If Cells(start, "C") = 0 Then
+                    For non_zero = start To i
+                        If Cells(non_zero, "C").Value <> 0 Then
+                            start = non_zero
+                            Exit For
+                        End If
+                    Next non_zero
+                End If
+            
+                'calculate the yearly change: last close minus first non-zero opening price
+                yearly_change = (Cells(i, "F") - Cells(start, "C"))
+                percentChange = yearly_change / Cells(start, "C")
+            
+                'go to the next ticker
+                start = i + 1
+            
+                'print the tickers data
+                Range("I" & 2 + j).Value = Cells(i, "A").Value
+                Range("J" & 2 + j).Value = yearly_change
+                Range("J" & 2 + j).NumberFormat = "0.00"
+                Range("K" & 2 + j).Value = percentChange
+                Range("K" & 2 + j).NumberFormat = "0.00%"
+                Range("L" & 2 + j).Value = volume
+                
+                
+                'conditional formatting for yearly change
+                If yearly_change > 0 Then
+                    Range("J" & 2 + j).Interior.ColorIndex = 4
+                ElseIf yearly_change < 0 Then
+                    Range("J" & 2 + j).Interior.ColorIndex = 3
+                Else
+                    Range("J" & 2 + j).Interior.ColorIndex = 0
+                End If
+                
             End If
-        Next
-
-
-'calculate the volumn
-        
-        Dim lastRow3 As Long
-        lastRow3 = Cells(Rows.Count, 9).End(xlUp).Row
-        
-        For m = 2 To lastRow3
-        
-        Range("L" & m) = Application.WorksheetFunction.SumIf(Range("A2:A158885"), Range("I" & m), Range("G2:G158885"))
-        
-        Next
-
-'yearlychange
-        
-        Dim n As Long
-        Dim o As Long
-        
-        Set DateRange = Range("B:B")
-        Range("N1").Value = "Open Value"
-        Range("O1").Value = "Close Value"
-        
-        opendate = WorksheetFunction.Min(DateRange)
-        closedate = WorksheetFunction.Max(DateRange)
-        
-        For n = 2 To Cells(Rows.Count, "I").End(xlUp).Row
-               For o = 2 To Cells(Rows.Count, "A").End(xlUp).Row
-               
-               If Cells(n, 9).Value = Cells(o, 1).Value And Cells(o, 2).Value = opendate Then
-               
-               Cells(n, 14).Value = Cells(o, 3).Value
-               
-               End If
-               
-               If Cells(n, 9).Value = Cells(o, 1).Value And Cells(o, 2).Value = closedate Then
-               
-               Cells(n, 15).Value = Cells(o, 6).Value
-               
-               End If
-                      
-        Next o
-        Next n
-
-'yearly percent change
-        
-        For i = 2 To Cells(Rows.Count, "I").End(xlUp).Row
-        Cells(i, 10).Value = Cells(i, 15).Value - Cells(i, 14).Value
-        Cells(i, 11).Value = (Cells(i, 15).Value - Cells(i, 14).Value) / Cells(i, 14).Value
-        
-        Cells(i, 11).Value = Format(Cells(i, 11).Value, "0.00%")
-        
-            If Cells(i, 10).Value < 0 Then
-                 Cells(i, 10).Interior.Color = RGB(255, 0, 0)
-                 
-             ElseIf Cells(i, 10).Value > 0 Then
-                   Cells(i, 10).Interior.Color = RGB(0, 255, 0)
+            
+            'reset the variables for the next ticker
+            volume = 0
+            yearly_change = 0
+            j = j + 1
+            
+        'add the volume to the volume total if the ticker is the same
+        Else
+            volume = volume + Cells(i, "G").Value
+        End If
              
-             End If
-        
-        Next i
-
+'end for loop for collecting and printing ticker data
+    Next i
+    
 'Bonus
         
         Range("S1").Value = "Ticker"
@@ -135,4 +145,9 @@ Sub Final()
         Next
         
     Columns("A:T").AutoFit
+
+'end for loop that goes through each sheet
+Next ws
+    
+'end subroutine
 End Sub
